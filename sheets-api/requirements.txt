@@ -10,3 +10,11 @@ rsa==3.4.2
 setuptools==40.0.0
 six==1.11.0
 uritemplate==3.0.0
+certifi==2018.4.16
+chardet==3.0.4
+google-auth-oauthlib==0.2.0
+idna==2.7
+oauthlib==2.1.0
+requests==2.19.1
+requests-oauthlib==1.0.0
+urllib3==1.23

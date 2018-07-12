@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27703.2042
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "sheets-api", "sheets-api\sheets-api.pyproj", "{70862C11-4255-4A21-9ABB-39B2B9ED6CD0}"
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "sheets-api", "sheets-api.pyproj", "{70862C11-4255-4A21-9ABB-39B2B9ED6CD0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

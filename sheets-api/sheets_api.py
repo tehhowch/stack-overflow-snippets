@@ -1,3 +1,13 @@
+''' sheets_api.py
+Copyright (c) 2018 by tehhowch
+This is free software: you can redistribute it and/or modify it under the
+terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later version.
+This is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+'''
+
 # stdlib imports
 import csv
 import json
@@ -52,7 +62,8 @@ def get_credentials_via_oauth(filename='client_secret.json', scopes=SCOPES, save
 def get_service(credentials, service='sheets', version='v4'):
     return build(service, version, credentials=credentials)
 
-def get_cells_with_color(sheets, wbId: str, sheetId: str, color: str=None, range: str=None):
+def get_cells_with_color(sheets, wbId: str, range: str=None):
+    '''Example function that requests the string value and background color of the given workbook and range'''
     params = {'spreadsheetId': wbId}
     if range:
         params['ranges'] = [range]
@@ -65,11 +76,16 @@ if __name__ == '__main__':
     if not creds:
         creds = get_credentials_via_oauth()
     sheets = get_service(creds)
+
     # Example for getting color & value data
-    celldata = get_cells_with_color(sheets, '1P8UDv4j2lPM0hAKw4EbBT_GtvlOgFYeARV16NzWA6pc', '', range='Scoreboard!A1:H')
+    wbId = input("Enter the 41-character spreadsheet ID")
+    queriedRange = input("Enter the range to acquire, e.g. 'Arbitrary Sheet Name'!A1:K")
+    celldata = get_cells_with_color(sheets, wbId, range=queriedRange)
+
+
     dataset = []
     default_bg = {'red': 1, 'green': 1, 'blue': 1}
-    # all_data['sheets'] is a list of sheet resources (per the API spec.)
+    # celldata['sheets'] is a list of sheet resources (per the API spec.)
     for sheet in celldata['sheets']:
         # The sheet resource is a dict with keys determined by what we requested in fields
         # (i.e.  properties (->sheetId, ->title), data)
