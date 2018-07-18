@@ -35,7 +35,6 @@ def get_saved_credentials(filename='creds.json'):
         return Credentials(**fileData)
     return None
 
-
 def store_creds(credentials, filename='creds.json'):
     if not isinstance(credentials, Credentials):
         return
@@ -48,7 +47,6 @@ def store_creds(credentials, filename='creds.json'):
         json.dump(fileData, file)
     print(f'Credentials serialized to {filename}.')
 
-
 def get_credentials_via_oauth(filename='client_secret.json', scopes=SCOPES, saveData=True) -> Credentials:
     '''Use data in the given filename to get oauth data
     '''
@@ -58,9 +56,10 @@ def get_credentials_via_oauth(filename='client_secret.json', scopes=SCOPES, save
         store_creds(iaflow.credentials)
     return iaflow.credentials
 
-
 def get_service(credentials, service='sheets', version='v4'):
     return build(service, version, credentials=credentials)
+
+
 
 def get_cells_with_color(sheets, wbId: str, range: str=None):
     '''Example function that requests the string value and background color of the given workbook and range'''
@@ -70,18 +69,11 @@ def get_cells_with_color(sheets, wbId: str, range: str=None):
     params['fields'] = "sheets(data(rowData(values(effectiveFormat/backgroundColor,formattedValue)),startColumn,startRow),properties(sheetId,title))"
     return sheets.spreadsheets().get(**params).execute()
 
-if __name__ == '__main__':
-    print('Executing')
-    creds = get_saved_credentials()
-    if not creds:
-        creds = get_credentials_via_oauth()
-    sheets = get_service(creds)
-
+def colors_example(service):
     # Example for getting color & value data
     wbId = input("Enter the 41-character spreadsheet ID")
     queriedRange = input("Enter the range to acquire, e.g. 'Arbitrary Sheet Name'!A1:K")
-    celldata = get_cells_with_color(sheets, wbId, range=queriedRange)
-
+    celldata = get_cells_with_color(service, wbId, range=queriedRange)
 
     dataset = []
     default_bg = {'red': 1, 'green': 1, 'blue': 1}
@@ -127,3 +119,62 @@ if __name__ == '__main__':
     r1 = dataset[0]
     print(f'Cell A1 color is {r1["backgrounds"][0][0]} and has value {r1["values"][0][0]}')
     print(f'Cell D2 color is {r1["backgrounds"][3][1]} and has value {r1["values"][3][1]}')
+
+
+
+def get_existing_basic_filters(service, wkbkId: str) -> dict:
+    params = {'spreadsheetId': wkbkId,
+              'fields': 'sheets(properties(sheetId,title),basicFilter)'}
+    response = service.spreadsheets().get(**params).execute()
+    # Create a sheetId-indexed dict from the result
+    filters = {}
+    for sheet in response['sheets']:
+        if 'basicFilter' in sheet:
+            filters[sheet['properties']['sheetId']] = sheet['basicFilter']
+    return filters
+
+def clear_filters(service, wkbkId: str, known_filters: dict):
+    requests = []
+    for sheetId, filter in known_filters.items():
+        requests.append({'clearBasicFilter': {'sheetId': sheetId}})
+    if not requests:
+        return
+    params = {'spreadsheetId': wkbkId,
+              'body': {'requests': requests}}
+    service.spreadsheets().batchUpdate(**params).execute()
+
+def apply_filters(service, wkbkId: str, filters: dict):
+    # All requests are validated before any are applied, so bundling the set and clear filter
+    # operations in the same request would fail: only 1 basic filter can exist at a time.
+    clear_filters(service, wkbkId, filters)
+    
+    requests = []
+    for sheetId, filter in filters.items():
+        # By removing the starting and ending indices from the 'range' property,
+        # we ensure the basicFilter will apply to the entire sheet bounds. If one knows the 
+        # desired values for startColumnIndex, startRowIndex, endRowIndex, endColumnIndex,
+        # then they can be used to create a range-specific basic filter.
+        filter['range'] = {'sheetId': sheetId}
+        requests.append({'setBasicFilter': {'filter': filter}})
+    if not requests:
+        return
+    params = {'spreadsheetId': wkbkId,
+              'body': {'requests': requests}}
+    service.spreadsheets().batchUpdate(**params).execute()
+
+def filter_example(service):
+    wkbkId = input("Enter the 41-character spreadsheet ID")
+    currentFilters = get_existing_basic_filters(service, wkbkId)
+    pprint(currentFilters)
+    apply_filters(service, wkbkId, currentFilters)
+    pprint(get_existing_basic_filters(service, wkbkId))
+
+
+
+if __name__ == '__main__':
+    print('Executing')
+    creds = get_saved_credentials()
+    if not creds:
+        creds = get_credentials_via_oauth()
+    sheets = get_service(creds)
+    
