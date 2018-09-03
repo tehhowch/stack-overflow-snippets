@@ -50,13 +50,19 @@ def store_creds(credentials, filename='creds.json'):
 def get_credentials_via_oauth(filename='client_secret.json', scopes=SCOPES, saveData=True) -> Credentials:
     '''Use data in the given filename to get oauth data
     '''
-    iaflow: InstalledAppFlow = InstalledAppFlow.from_client_secrets_file(filename, scopes)
-    iaflow.run_local_server()
-    if saveData:
-        store_creds(iaflow.credentials)
-    return iaflow.credentials
+    try:
+        iaflow: InstalledAppFlow = InstalledAppFlow.from_client_secrets_file(filename, scopes)
+    except FileNotFoundError as err:
+        print('Unable to authorize - missing client secret information file.', err)
+    else:
+        iaflow.run_local_server()
+        if saveData:
+            store_creds(iaflow.credentials)
+        return iaflow.credentials
 
 def get_service(credentials, service='sheets', version='v4'):
+    if not credentials:
+        print(f'No credentials given. Attempting to build service {service}{version} with application default credentials.')
     return build(service, version, credentials=credentials)
 
 
