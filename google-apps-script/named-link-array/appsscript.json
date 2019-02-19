@@ -1,0 +1,11 @@
+{
+  "timeZone": "America/New_York",
+  "dependencies": {},
+  "executionApi": {
+    "access": "ANYONE"
+  },
+  "exceptionLogging": "STACKDRIVER",
+  "oauthScopes": [
+    "https://www.googleapis.com/auth/documents.currentonly"
+  ]
+}
