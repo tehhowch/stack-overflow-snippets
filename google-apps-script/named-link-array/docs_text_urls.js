@@ -187,7 +187,7 @@ function getDocStats(doc) {
         children: body.getNumChildren(),
         page: {width: body.getPageWidth(), height: body.getPageHeight()},
         margins: {bottom: body.getMarginBottom(), top: body.getMarginTop(), left: body.getMarginLeft(), right: body.getMarginRight()}
-    }
+    };
 }
 
 /**

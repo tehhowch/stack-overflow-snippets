@@ -1,0 +1,63 @@
+<!-- htmlservice-promises-ui.html
+Copyright (c) 2019 by tehhowch
+This is free software: you can redistribute it and/or modify it under the
+terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later version.
+This is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+-->
+
+<!--
+This simple HTML file shows how you can create a client-side function that will
+call any non-private Apps Script function in the associated Script Project, and
+return a native `Promise`, allowing you to use Promise methods such as `all`,
+`then`, and `catch`, and avoiding nested "callback hell" situations.
+
+Note: if you support a browser that doesn't have support for arrow syntax, rest
+parameters, or Promises, you absolutely will need to polyfill that. But, I'm not
+even sure why you're trying to use this in that situation, anyway ;)
+-->
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+  </head>
+  <body>
+    <button onclick="doit()">Click to run</button>
+  </body>
+  <script>
+    function doit() {
+      makeAppsScriptCall(
+          "some_valid_function_name", // The Apps Script server function, in this case, `function some_valid_function_name`
+           null,                      // No user object here
+           4, 5, 6, 7, 8, 9, 10)      // Function arguments (as many as needed for your situation)
+        // Per official documentation, the server return value / exception is the first parameter, and the "User Object" is the second.
+        .then((serverReturnValue, userObj) => { /** do something with return value */ })
+        .catch((unhandledServerSideException, userObj) => { /** handle the uncaught server-side error */ });
+    }
+
+    /**
+     * @param {string} fnName The name of the non-private server-side function to execute, e.g. "foo"
+     * @param {any} obj The "User Object" associated with this Apps Script call.
+     *                  Review https://developers.google.com/apps-script/guides/html/communication#user_objects
+     * @param {...any} args Arguments which should be passed to the server Apps Script function. Remember, no raw `Date`s!
+     * @returns {Promise<any>} The eventual result of a server-side call, or an immediate rejection (i.e. the function is not callable)
+     */
+    const makeAppsScriptCall = (fnName, obj, ...args) => {
+      return new Promise((resolve, reject) => {
+        let TASK = google.script.run
+          .withSuccessHandler(resolve)
+          .withFailureHandler(reject);
+        if (obj) {
+          TASK = TASK.withUserObject(obj);
+        }
+        if (TASK[fnName] === undefined) {
+          reject("'" + fnName + "' is not a global function in your Apps Script project");
+        } else {
+          TASK[fnName].apply(null, args);
+        }
+      });
+    };
+    </script>
+</html>
